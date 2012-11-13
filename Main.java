@@ -1,0 +1,42 @@
+
+import java.util.Scanner;
+
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ *
+ * @author nicolas
+ */
+public class Main {
+   
+    private static Clock clockAdded;
+    
+    public static void main(String[] args) throws InterruptedException{
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Ingrese el nombre del algoritmo que utilizara el "
+                + "planeador");
+        Planificador p = new Planificador(scanner.next());
+        p.setName("Planificador");
+        p.start();
+        if(p.getNombreAlgoritmo().equals("SJF") || 
+                p.getNombreAlgoritmo().equals("PA")){
+            int i = 3;
+            while(i>0){
+                if(clockAdded == null){
+                    clockAdded = new Clock((long)(Math.random()*50)+100);
+                    clockAdded.beginCount();
+                }else if(clockAdded.ended && 
+                        !p.getState().equals(Thread.State.TERMINATED)){
+                    p.suspend();
+                    p.addProcess(new Process1(null));
+                    p.resume();
+                    i--;
+                }
+            }
+        }
+    } 
+    
+}
