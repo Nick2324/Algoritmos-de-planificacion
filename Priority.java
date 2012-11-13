@@ -13,7 +13,6 @@ public class Priority {
     private long quantum;
     private Clock suspendedClock;
     private Clock blockedClock;
-    private Clock clockProcess;
     private ProcMoveManager moveManager;
     private ArrayList<NodeProcess> ready;
     private ArrayList<NodeProcess> suspended;
@@ -231,30 +230,26 @@ public class Priority {
         return ready.size() + suspended.size() + blocked.size();
     }
     
-    public void initializeClockProcess(long value){
-        this.clockProcess = new Clock(value);
-        this.blockedClock.setName("Process clock "+priority);
-        this.clockProcess.beginCount();
-    }
-    
     public void initializeSuspendedClock(){
         try{
             this.suspendedClock = new Clock((long)
                     (Math.random()*25/this.suspended.size()));
+            this.suspendedClock.setName("Suspended Clock");
+            this.suspendedClock.beginCount();
         }catch(Exception e){
-            this.suspendedClock = new Clock(10);
+            this.suspendedClock = new Clock(50);
         }
-        this.suspendedClock.setName("Suspended clock "+priority);
     }
     
     public void initializeBlockedClock(){
         try{
             this.blockedClock = new Clock((long)
                     (Math.random()*25/this.blocked.size()));
+            this.blockedClock.setName("Blocked Clock");
+            this.blockedClock.beginCount();
         }catch(Exception e){
-            this.blockedClock = new Clock(10);
+            this.blockedClock = new Clock(50);
         }
-        this.blockedClock.setName("Blocked clock "+priority);
     }
     
     public void initializeProcMoveManager(){
@@ -263,15 +258,29 @@ public class Priority {
     }
     
     public void endProcMoveManager(){
-        this.moveManager.endCount();
+        try{
+            this.moveManager.endCount();
+        }catch(NullPointerException e){}
+    }
+    
+    public void endSuspendedClock(){
+        try{
+            this.suspendedClock.endCount();
+        }catch(NullPointerException e){}
+    }
+    
+    public void endBlockedClock(){
+        try{
+            this.blockedClock.endCount();
+        }catch(NullPointerException e){}
     }
     
     public boolean getProcMoveManagerState() throws Exception{
         return this.moveManager.getClockState();
     }
     
-    public void moveProcess(ArrayList<Priority> priority){
-        this.moveManager.movePriority(priority);
+    public int moveProcess(ArrayList<Priority> priority){
+        return this.moveManager.movePriority(priority);
     }
     
     public void setSuspendedClock(Clock suspendedClock){
@@ -282,20 +291,12 @@ public class Priority {
         this.blockedClock = blockedClock;
     }
     
-    public Clock getClockProcess(){
-        return this.clockProcess;
-    }
-    
     public Clock getSuspendedClock(){
         return this.suspendedClock;
     }
     
     public Clock getBlockedClock(){
         return this.blockedClock;
-    }
-    
-    public void setClockProcess(Clock clockProcess){
-        this.clockProcess = clockProcess;
     }
     
 }

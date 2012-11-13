@@ -20,12 +20,16 @@ public class ProcMoveManager {
         this.quantum = quantum;
     }
     
-    public void movePriority(ArrayList<Priority> priority){
+    public int movePriority(ArrayList<Priority> priority){
+        int idProcessMoved = -1;
         if(!priority.get(this.priority).emptyQueues() && 
-                priority.size() - 1 == this.priority)
+                priority.size() - 1 != this.priority){
+            idProcessMoved = priority.get(this.priority).getCurrentID();
             priority.get(this.priority + 1).addProcess(
                 priority.get(this.priority).pollProcess());
-    }
+        }
+        return idProcessMoved;
+   }
     
     public void beginCount(){
         this.moveProcess = null;
