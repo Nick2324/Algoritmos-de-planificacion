@@ -19,7 +19,8 @@ public class Process1 extends Process implements Runnable{
     
     protected int realizarProceso(){
         try{
-            for(i = 0;i < 10000000;i++);
+            int hasta = (int)(Math.random()*100000000 + 100);
+            for(i = 0;i < hasta;i++);
             return 0;
         }catch(Exception e){
             return 1;
