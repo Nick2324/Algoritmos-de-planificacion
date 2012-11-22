@@ -23,7 +23,8 @@ public class ProcMoveManager {
     public int movePriority(ArrayList<Priority> priority){
         int idProcessMoved = -1;
         if(!priority.get(this.priority).emptyQueues() && 
-                priority.size() - 1 != this.priority){
+                priority.size() - 1 != this.priority && 
+                !priority.get(this.priority + 1).emptyQueues()){
             idProcessMoved = priority.get(this.priority).getCurrentID();
             priority.get(this.priority + 1).addProcess(
                 priority.get(this.priority).pollProcess());
