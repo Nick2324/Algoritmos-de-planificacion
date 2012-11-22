@@ -49,7 +49,7 @@ public class Planificador extends Thread{
             NodeProcess newProcess = null;
             for(int i = 0; i < currentPriority; i++)
                 this.priorityQueues.add(new Priority(i));
-            for(int i = 0; i < currentPriority; i++){
+            for(int i = 0; i < this.currentPriority; i++){
                 nProcess = (int)(Math.random()*((i+1)*2));
                 for(int j = 0; j < nProcess; j++){
                     newProcess = new NodeProcess(new Process1(null));
@@ -129,7 +129,7 @@ public class Planificador extends Thread{
             }
             this.priorityQueues.get(this.currentPriority).sortByQuantum();
             wraperSJF();
-        }else if(nombreAlgoritmo.equals("PNA")){
+        }else if(nombreAlgoritmo.equals("PA")){
             this.currentPriority = 0;
             this.priorityQueues.add(new Priority(this.priorityQueues.size()+1));
             NodeProcess newProcess = null;
@@ -143,8 +143,8 @@ public class Planificador extends Thread{
                         addProcess(newProcess);
             }
             this.priorityQueues.get(this.currentPriority).sortByPriority();
-            prioridadNoApropiativo();
-        }else if(this.nombreAlgoritmo.equals("PA")){
+            prioridadApropiativo();
+        }else if(this.nombreAlgoritmo.equals("PNA")){
             this.currentPriority = 0;
             NodeProcess newProcess;
             this.priorityQueues.add(new Priority(this.priorityQueues.size()+1));
@@ -157,7 +157,7 @@ public class Planificador extends Thread{
                 this.priorityQueues.get(this.currentPriority).addProcess(newProcess);
             }
             this.priorityQueues.get(this.currentPriority).sortByPriority();
-            prioridadApropiativo();
+            prioridadNoApropiativo();
         }
         System.out.println("Planificación terminada");
     }
@@ -388,7 +388,7 @@ public class Planificador extends Thread{
         }
     }
     
-    public void prioridadNoApropiativo(){
+    public void prioridadApropiativo(){
         //Mientras hayan procesos en cola
         while(!this.priorityQueues.get(this.currentPriority).emptyQueues()){
             /*
@@ -413,7 +413,7 @@ public class Planificador extends Thread{
         }
     }
     
-    public void prioridadApropiativo(){
+    public void prioridadNoApropiativo(){
         /*
          * Hasta que no se termine de atender todos los procesos
          */
@@ -596,7 +596,7 @@ public class Planificador extends Thread{
             this.priorityQueues.get(this.currentPriority).addProcess(newProcess);
             this.priorityQueues.get(this.currentPriority).sortByQuantum();
             System.out.println("Proceso añadido");
-        }else if(this.nombreAlgoritmo.equals("PA")){
+        }else if(this.nombreAlgoritmo.equals("PNA")){
             if(this.priorityQueues.get(this.currentPriority).getCurrentPState().equals(
                     Process.PState.CRITICAL))
                 this.priorityQueues.get(this.currentPriority).suspendProcess();
