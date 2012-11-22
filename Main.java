@@ -22,7 +22,7 @@ public class Main {
         p.setName("Planificador");
         p.start();
         if(p.getNombreAlgoritmo().equals("SRTF") || 
-                p.getNombreAlgoritmo().equals("PA")){
+                p.getNombreAlgoritmo().equals("PNA")){
             int i = 3;
             while(i>0){
                 if(clockAdded == null){
