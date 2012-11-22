@@ -21,7 +21,7 @@ public class Main {
         Planificador p = new Planificador(scanner.next());
         p.setName("Planificador");
         p.start();
-        if(p.getNombreAlgoritmo().equals("SJF") || 
+        if(p.getNombreAlgoritmo().equals("SRTF") || 
                 p.getNombreAlgoritmo().equals("PA")){
             int i = 3;
             while(i>0){
