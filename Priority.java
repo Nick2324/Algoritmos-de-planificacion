@@ -115,15 +115,6 @@ public class Priority {
             this.ready.add(this.blocked.remove(0));
     }
     
-    public void addProcessToHead(Process process, int ID){
-        NodeProcess nuevo = new NodeProcess(process);
-        nuevo.getProcess().setID(ID);
-        if(this.ready.size() == 0)
-            this.ready.add(nuevo);
-        else
-            this.ready.add(0,nuevo);
-    }
-    
     public NodeProcess pollProcess(){
         return this.ready.remove(0);
     }
@@ -145,9 +136,6 @@ public class Priority {
                     this.ready.add(j,this.ready.get(j+1));
                     this.ready.remove(j+2);
                 }
-        for(NodeProcess i:ready)
-            System.out.print(i.getPriority()+" ");
-        System.out.println("");
     }
     
     public void sortByQuantum(){
@@ -211,6 +199,20 @@ public class Priority {
     
     public int getCurrentID(){
         return this.ready.get(0).getProcess().getID();
+    }
+    
+    public int getCurrentSuspendedID(){
+        if(this.suspended.size() > 0)
+            return this.suspended.get(0).getID();
+        else
+            return -1;
+    }
+    
+    public int getCurrentBlockedID(){
+        if(this.blocked.size() > 0)
+            return this.blocked.get(0).getID();
+        else
+            return -1;
     }
     
     public void generateCurrentQuantum(){
