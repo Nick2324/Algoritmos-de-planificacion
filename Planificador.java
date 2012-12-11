@@ -2,22 +2,27 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Planificador extends Thread{
-    public ArrayList<Priority> priorityQueues;
-    public String nombreAlgoritmo;
-    public Clock clockProcess;
-    public int currentPriority;
-    public int nProcess;
+    private ArrayList<Priority> priorityQueues;
+    private String nombreAlgoritmo;
+    private Clock clockProcess;
+    private int currentPriority;
+    private int nProcess;
+    private int recursos;
+    private int recursosUtilizados;
+    private int turnoActual;
     
     public Planificador(String tipoAlgoritmo){
         nombreAlgoritmo = tipoAlgoritmo;
         priorityQueues = new ArrayList<Priority>();
+        recursos = 20;
+        turnoActual = 0;
     }
     
     public void run(){
         //Adicion de procesos de acuerdo al algoritmo elegido
         //Si es un algoritmo apropiativo o no apropiativo ordena la
         //lista ready contenida en la clase Priority
-        int nProcess = (int) (Math.random()*3) + 2;
+        int nProcess = (int) (Math.random()*20) + 5;
         if(nombreAlgoritmo.equals("FCFS")){
             this.currentPriority = 0;
             this.priorityQueues.add(new Priority(this.priorityQueues.size()+1));
@@ -77,7 +82,7 @@ public class Planificador extends Thread{
              * Inicializando procesos para cada una de las colas de prioridad
              */
             for(int i = 0; i < currentPriority; i++){
-                nProcess = 3;//(int)(Math.random()*((i+1)*2));
+                nProcess = 5;//(int)(Math.random()*((i+1)*2));
                 for(int j = 0; j < nProcess; j++){
                     newProcess = new NodeProcess(new Process1(null));
                     newProcess.generateQuantum();
@@ -96,6 +101,8 @@ public class Planificador extends Thread{
              */
             for(int i = 0; i < currentPriority - 1; i++)
                 this.priorityQueues.get(i).initializeProcMoveManager();
+            asignarTurnosRR();
+            asignarTurnosFCFS();
             colasMultiplesRetroalimentado();
         }else if(nombreAlgoritmo.equals("SRTF")){
             this.currentPriority = 0;
@@ -167,13 +174,20 @@ public class Planificador extends Thread{
                 Process.PState.NEW)){
             System.out.println("Iniciando proceso "+
                     this.priorityQueues.get(this.currentPriority).getCurrentID());
+            recursosUtilizados += this.priorityQueues.get(this.currentPriority).
+                    getCurrentRecursosNecesitados();
             this.priorityQueues.get(this.currentPriority).startCurrentProcess();
+            System.out.println("---Recursos disponibles ahora: " + 
+                    (recursos - recursosUtilizados));
         }else if(this.priorityQueues.get(this.currentPriority).getCurrentPState().equals(
                 Process.PState.TERMINATED)){
             this.priorityQueues.get(this.currentPriority).endCurrentProcess();
             System.out.println("Terminando proceso "+
                     this.priorityQueues.get(this.currentPriority).getCurrentID());
-            this.priorityQueues.get(this.currentPriority).pollProcess();
+            recursosUtilizados -= this.priorityQueues.get(this.currentPriority).
+                    pollProcess().getRecursosNecesitados();
+            System.out.println("---Recursos disponibles ahora: " + 
+                    (recursos - recursosUtilizados));
         }
     }
     
@@ -183,8 +197,6 @@ public class Planificador extends Thread{
          * para aniadir procesos bloqueados y suspendidos
          * a la cola de listo
          */
-        if(this.priorityQueues.get(this.currentPriority).getBlockedClock() == null)
-            this.priorityQueues.get(this.currentPriority).initializeBlockedClock();
         
         if(this.priorityQueues.get(this.currentPriority).getSuspendedClock() == null)
             this.priorityQueues.get(this.currentPriority).initializeSuspendedClock();
@@ -203,6 +215,8 @@ public class Planificador extends Thread{
                     this.priorityQueues.get(this.currentPriority).getCurrentID()
                     + " con cuanto " + this.priorityQueues.
                     get(this.currentPriority).getCurrentQuantum() + "ms");
+            System.out.println("---Recursos disponibles: " + 
+                    (recursos-recursosUtilizados));
             this.clockProcess.beginCount();
             this.priorityQueues.get(this.currentPriority).startCurrentProcess(); 
         }else 
@@ -240,26 +254,47 @@ public class Planificador extends Thread{
                         this.priorityQueues.get(this.currentPriority).getCurrentQuantum());
             this.clockProcess.beginCount();
             this.priorityQueues.get(this.currentPriority).resumeCurrentProcess();
-        }else 
-        /*
-         * Se bloquea el proceso actual segun un numero aleatorio.
-         */
-         if(Math.random() == 0.5){
-            System.out.println("Bloqueando proceso "+
-                    this.priorityQueues.get(this.currentPriority).getCurrentID());
-            this.priorityQueues.get(this.currentPriority).blockCurrentProcess();
-        }else 
+        }else  
         /*
          * Desbloquea el proceso para poder ejecutarlo
          */
          if(this.priorityQueues.get(this.currentPriority).getCurrentPState().equals(
                 Process.PState.BLOCKED)){
-            System.out.println("Desbloqueando proceso "+
-                    this.priorityQueues.get(this.currentPriority).getCurrentID() + 
-                    "con cuanto " + this.priorityQueues.
-                    get(this.currentPriority).getCurrentQuantum() + "ms");
-            this.priorityQueues.get(this.currentPriority).unblockCurrentProcess();
-        }else 
+                System.out.println("Desbloqueando proceso "+
+                        this.priorityQueues.get(this.currentPriority).getCurrentID() + 
+                        " con cuanto " + this.priorityQueues.
+                        get(this.currentPriority).getCurrentQuantum() + "ms");
+                this.priorityQueues.get(this.currentPriority).unblockCurrentProcess();
+                if(this.clockProcess != null && this.clockProcess.isAlive())
+                    this.clockProcess.endCount();
+                //this.priorityQueues.get(this.currentPriority).generateCurrentQuantum();
+                this.clockProcess = new Clock(
+                            this.priorityQueues.get(this.currentPriority).getCurrentQuantum());
+                System.out.println("Comenzando proceso "+
+                        this.priorityQueues.get(this.currentPriority).getCurrentID()
+                        + " con cuanto " + this.priorityQueues.
+                        get(this.currentPriority).getCurrentQuantum() + "ms");
+                this.clockProcess.beginCount();
+                this.priorityQueues.get(this.currentPriority).startCurrentProcess();
+        }else if(this.priorityQueues.get(this.currentPriority).emptyReady()){
+                if(this.priorityQueues.get(this.currentPriority).emptySuspended()
+                   && this.priorityQueues.get(this.currentPriority).
+                        getCurrentBlockedProcess().getRecursosNecesitados() +
+                        recursosUtilizados < recursos){
+                    System.out.println("***Pasando a cola de listos proceso " + 
+                            this.priorityQueues.get(this.currentPriority).
+                            getCurrentBlockedID());
+                    recursosUtilizados += this.priorityQueues.
+                            get(this.currentPriority).offerBlockedProcess().
+                            getRecursosNecesitados();
+                    if(clockProcess != null){
+                        clockProcess.endCount();
+                        clockProcess = null;
+                    }
+                    System.out.println("---Recursos disponibles ahora: " + 
+                            (recursos - recursosUtilizados));
+                }
+        }else
         /*
          * Desencola si el proceso ya ha sido terminado
          */  
@@ -268,8 +303,22 @@ public class Planificador extends Thread{
             this.priorityQueues.get(this.currentPriority).endCurrentProcess();
             System.out.println("Terminando proceso "+
                     this.priorityQueues.get(this.currentPriority).getCurrentID());
-            this.priorityQueues.get(this.currentPriority).pollProcess();
+            recursosUtilizados -= this.priorityQueues.get(this.currentPriority).
+                    pollProcess().getRecursosNecesitados();
+            if(!this.priorityQueues.get(this.currentPriority).emptyBlocked()
+                    && this.priorityQueues.get(this.currentPriority).
+                        getCurrentBlockedProcess().getRecursosNecesitados() +
+                        recursosUtilizados < recursos){
+                System.out.println("***Pasando proceso " + 
+                    this.priorityQueues.get(currentPriority).
+                    getCurrentBlockedID() + " de bloqueados a listos");
+                recursosUtilizados += this.priorityQueues.
+                            get(this.currentPriority).offerBlockedProcess().
+                            getRecursosNecesitados();
+            }
             this.clockProcess.endCount();
+            System.out.println("---Recursos disponibles ahora: " + 
+                    (recursos - recursosUtilizados));
         }else 
         /*
          * Soluciona el problema de que el proceso este en critico
@@ -281,7 +330,21 @@ public class Planificador extends Thread{
                 this.priorityQueues.get(this.currentPriority).getState().equals(
                 Thread.State.TERMINATED)){
                 this.priorityQueues.get(this.currentPriority).endCurrentProcess();
-            this.priorityQueues.get(this.currentPriority).pollProcess();
+                recursosUtilizados -= this.priorityQueues.get(this.currentPriority).
+                pollProcess().getRecursosNecesitados(); 
+                if(!this.priorityQueues.get(this.currentPriority).emptyBlocked()
+                        && this.priorityQueues.get(this.currentPriority).
+                        getCurrentBlockedProcess().getRecursosNecesitados() +
+                        recursosUtilizados < recursos){
+                    System.out.println("***Pasando proceso " + 
+                        this.priorityQueues.get(currentPriority).
+                        getCurrentBlockedID() + " de bloqueados a listos");
+                    recursosUtilizados += this.priorityQueues.
+                            get(this.currentPriority).offerBlockedProcess().
+                            getRecursosNecesitados();
+                }
+                System.out.println("---Recursos disponibles ahora: " + 
+                        (recursos - recursosUtilizados));
         }
         
         int id;
@@ -307,17 +370,13 @@ public class Planificador extends Thread{
          * son emulados con el reloj de bloqueados: despues de que el 
          * reloj de bloqueados termine de contar
          */
-        if(this.priorityQueues.get(this.currentPriority).getBlockedClock().ended){
+        /*if(this.priorityQueues.get(this.currentPriority).getBlockedClock().ended){
             id = this.priorityQueues.get(this.currentPriority)
                     .getCurrentBlockedID();
-            if(id != -1){
-                System.out.println("Encolando a listos proceso " + id + 
-                        " desde bloqueados");
-                this.priorityQueues.get(this.currentPriority).offerBlockedProcess();
-            }
+            
             this.priorityQueues.get(this.currentPriority).endBlockedClock();
             this.priorityQueues.get(this.currentPriority).setBlockedClock(null);
-        }
+        }*/
     }
     
     public void sjf(){
@@ -548,7 +607,7 @@ public class Planificador extends Thread{
                                 this.priorityQueues.get(i).initializeProcMoveManager();
                             }
                         }catch(Exception e){
-                            System.out.println(e.toString());
+                            e.printStackTrace();
                         }
                 }
             }else
@@ -561,6 +620,29 @@ public class Planificador extends Thread{
         }
         if(this.clockProcess != null)
             this.clockProcess.endCount();
+    }
+    
+    /*
+     * Asigna recursos para las colas cuyo algoritmo sea Round Robin (prioridad mas alta) 
+     */
+    
+    public void asignarTurnosRR(){
+        int[] banderasTRD = this.priorityQueues.
+                get(this.priorityQueues.size() - 1).
+                asignarTurnosRR(recursos, recursosUtilizados, turnoActual);
+        turnoActual = banderasTRD[0];
+        recursosUtilizados = banderasTRD[1];
+    }
+    
+    /*
+     * Asigna turnos a la cola de prioridad que tenga asignado el algoritmo
+     * FCFS (todas menos la de mayor prioridad)
+     */
+    
+    public void asignarTurnosFCFS(){
+        for(int i = this.priorityQueues.size() - 2; i >= 0; i--)
+            turnoActual = this.priorityQueues.get(i).
+                    asignarTurnosFCFS(turnoActual);
     }
     
     public void addProcess(Process process){

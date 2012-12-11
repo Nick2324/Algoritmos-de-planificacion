@@ -9,10 +9,21 @@ public class NodeProcess implements FlagsManager {
     private ArrayList<Long> flags;
     private long quantum;
     private int priority;
+    private int recursosNecesitados;
+    private int turn;
     
     public NodeProcess(Process process){
         this.process = process;
         flags = new ArrayList<Long>();
+        recursosNecesitados = (int)(Math.random() * 9) + 1;
+    }
+    
+    public void setTurn(int turn) {
+        this.turn = turn;
+    }
+    
+    public int getTurn() {
+        return turn;
     }
     
     public Process getProcess(){
@@ -49,6 +60,15 @@ public class NodeProcess implements FlagsManager {
 
     public void generateQuantum() {
         this.quantum = (long) (Math.random()*100) + 50;
+    }
+    
+    public int getRecursosNecesitados(){
+        return this.recursosNecesitados;
+    }
+
+    @Override
+    public void setTurn() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
 }

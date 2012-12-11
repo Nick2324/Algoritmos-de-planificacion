@@ -37,8 +37,11 @@ public abstract class Process extends Thread{
     }
     
     public void blockProcess(){
-        super.suspend();
         this.state = PState.BLOCKED;
+    }
+    
+    public void unblockProcess(){
+        this.state = PState.CRITICAL;
     }
     
     public void endProcess(){

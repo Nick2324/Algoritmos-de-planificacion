@@ -25,9 +25,19 @@ public class ProcMoveManager {
         if(!priority.get(this.priority).emptyQueues() && 
                 priority.size() - 1 != this.priority && 
                 !priority.get(this.priority + 1).emptyQueues()){
-            idProcessMoved = priority.get(this.priority).getCurrentID();
-            priority.get(this.priority + 1).addProcess(
-                priority.get(this.priority).pollProcess());
+            if(!priority.get(this.priority).emptyReady()){
+                idProcessMoved = priority.get(this.priority).getCurrentID();
+                priority.get(this.priority + 1).addProcessToBlocked(
+                    priority.get(this.priority).pollProcess());
+            }else if(!priority.get(this.priority).emptySuspended()){
+                idProcessMoved = priority.get(this.priority).getCurrentSuspendedID();
+                priority.get(this.priority + 1).addProcessToBlocked(
+                    priority.get(this.priority).pollSuspendedProcess());
+            }else if(!priority.get(this.priority).emptyBlocked()){
+                idProcessMoved = priority.get(this.priority).getCurrentBlockedID();
+                priority.get(this.priority + 1).addProcessToBlocked(
+                    priority.get(this.priority).pollBlockedProcess());
+            }
         }
         return idProcessMoved;
    }

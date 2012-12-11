@@ -15,13 +15,15 @@ public class Main {
     private static Clock clockAdded;
     
     public static void main(String[] args) throws InterruptedException{
-        Scanner scanner = new Scanner(System.in);
+        /*Scanner scanner = new Scanner(System.in);
         System.out.println("Ingrese el nombre del algoritmo que utilizara el "
-                + "planeador");
-        Planificador p = new Planificador(scanner.next());
+                + "planeador");*/
+        System.out.println("Colas multiples retroalimentadas y"
+                + " algoritmo de Peterson");
+        Planificador p = new Planificador("CMR");
         p.setName("Planificador");
         p.start();
-        if(p.getNombreAlgoritmo().equals("SRTF") || 
+        /*if(p.getNombreAlgoritmo().equals("SRTF") || 
                 p.getNombreAlgoritmo().equals("PNA")){
             int i = 3;
             while(i>0){
@@ -36,7 +38,7 @@ public class Main {
                     i--;
                 }
             }
-        }
-    } 
+        }*/
+    }
     
 }

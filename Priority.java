@@ -64,6 +64,10 @@ public class Priority {
         this.ready.add(process);
     }
     
+    public void addProcessToBlocked(NodeProcess process){
+        this.blocked.add(process);
+    }
+    
     public void addProcessToHead(Process process){
         NodeProcess nuevo = new NodeProcess(process);
         nuevo.setPriority(this.priority);
@@ -90,11 +94,16 @@ public class Priority {
     
     public void blockCurrentProcess(){
         this.ready.get(0).getProcess().blockProcess();
-        this.blocked.add(this.ready.get(0));
+        this.blocked.add(this.ready.remove(0));
+    }
+    
+    public void blockProcess(int index){
+        this.ready.get(index).getProcess().blockProcess();
+        this.blocked.add(this.ready.remove(index));
     }
     
     public void unblockCurrentProcess(){
-        this.ready.get(0).getProcess().resume();
+        this.ready.get(0).getProcess().unblockProcess();
     }
     
     public void resumeCurrentProcess(){
@@ -110,15 +119,28 @@ public class Priority {
             this.ready.add(this.suspended.remove(0));
     }
     
-    public void offerBlockedProcess(){
-        if(this.blocked.size() > 0)
-            this.ready.add(this.blocked.remove(0));
+    public NodeProcess offerBlockedProcess(){
+        NodeProcess n = null;
+        if(this.blocked.size() > 0){
+            n = this.blocked.remove(0);
+            this.ready.add(n);
+        }
+        return n;
     }
     
     public NodeProcess pollProcess(){
+        //System.out.println("Tamaño de ready en cola "+priority+" es "+ready.size());
         return this.ready.remove(0);
     }
     
+    public NodeProcess pollBlockedProcess(){
+        return this.blocked.remove(0);
+    }
+    
+    public NodeProcess pollSuspendedProcess(){
+        return this.suspended.remove(0);
+    }
+   
     public void toHead(int index){
         if(this.ready.size() > 1)
             this.ready.add(0,this.ready.remove(index));
@@ -146,6 +168,55 @@ public class Priority {
                     this.ready.add(j,this.ready.get(j+1));
                     this.ready.remove(j+2);
                 }
+    }
+    
+    public void sortByRecursosNecesitados(){
+        for(int i = 1; i < this.ready.size(); i++)
+            for(int j = 0; j < this.ready.size() - i; j++)
+                if(this.ready.get(j).getRecursosNecesitados() > 
+                        this.ready.get(j+1).getRecursosNecesitados()){
+                    this.ready.add(j,this.ready.get(j+1));
+                    this.ready.remove(j+2);
+                }
+    }
+    
+    public int[] asignarTurnosRR(int recursos, int recursosUtilizados, int turnoActual){
+        sortByRecursosNecesitados();
+        for(int i = 0; i < ready.size(); i++){
+            System.out.println("Asignado turno " + turnoActual + " al proceso "
+                    + ready.get(i).getID() + " en cola de prioridad " + priority);
+            ready.get(i).setTurn(turnoActual++);
+        }
+        int i;
+        for(i = 0; i < ready.size() && recursosUtilizados + 
+            ready.get(i).getRecursosNecesitados() <= recursos; i++)
+            recursosUtilizados += ready.get(i).getRecursosNecesitados();
+        if(ready.size() != i)
+            while(i < ready.size()){
+                System.out.println("Moviendo proceso " + ready.get(i).getID() +
+                        " a bloqueados en cola de prioridad " + priority);
+                this.blockProcess(i);
+            }
+        int[] retorno = {turnoActual,recursosUtilizados};
+        return retorno;
+    }
+    
+    public int asignarTurnosFCFS(int turnoActual){
+        sortByRecursosNecesitados();
+        for(int i = 0; i < ready.size(); i++){
+            System.out.println("Asignado turno " + turnoActual + " al proceso "
+                    + ready.get(i).getID() + " en cola de prioridad " + priority);
+            ready.get(i).setTurn(turnoActual++);
+        }
+        return turnoActual;
+    }
+    
+    public int getCurrentRecursosNecesitados(){
+        return this.ready.get(0).getRecursosNecesitados();
+    }
+    
+    public NodeProcess getCurrentBlockedProcess(){
+        return blocked.get(0);
     }
     
     public Thread.State getState(){
@@ -226,6 +297,18 @@ public class Priority {
     public boolean emptyQueues(){
         return this.ready.isEmpty() && this.suspended.isEmpty()
                 && this.blocked.isEmpty();
+    }
+    
+    public boolean emptyReady(){
+        return ready.isEmpty();
+    }
+    
+    public boolean emptySuspended(){
+        return suspended.isEmpty();
+    }
+    
+    public boolean emptyBlocked(){
+        return blocked.isEmpty();
     }
     
     public int getNumberProcess(){
